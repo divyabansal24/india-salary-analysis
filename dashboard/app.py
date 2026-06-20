@@ -826,7 +826,8 @@ def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
     )
     fig_map.update_geos(
         center={"lat": 20.5937, "lon": 78.9629},
-        projection_scale=4.5,
+        lataxis_range=[5.0, 38.0],
+        lonaxis_range=[65.0, 98.0],
         fitbounds="locations" if len(map_data.drop_duplicates(subset=['lat', 'lon'])) > 1 else False,
         visible=True,
         showcountries=True,
