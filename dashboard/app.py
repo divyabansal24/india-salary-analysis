@@ -33,7 +33,8 @@ CITY_COORDS = {
     'Coimbatore': {'lat': 11.0168, 'lon': 76.9558},
     'Nagpur': {'lat': 21.1458, 'lon': 79.0882},
     'Bhubaneswar': {'lat': 20.2961, 'lon': 85.8245},
-    'Kochi': {'lat': 9.9312, 'lon': 76.2673}
+    'Kochi': {'lat': 9.9312, 'lon': 76.2673},
+    'Remote': {'lat': 22.9734, 'lon': 78.6569}
 }
 
 # 2. Database Connection and Data Loader
@@ -798,7 +799,7 @@ def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
     city_stats['purchasing_power_ratio'] = city_stats['avg_salary_lpa'] / city_stats['cost_of_living_index']
     
     # Map Coordinates
-    map_data = city_stats[city_stats['city'] != 'Remote'].copy()
+    map_data = city_stats.copy()
     map_data['lat'] = map_data['city'].map(lambda x: CITY_COORDS.get(x, {}).get('lat', np.nan))
     map_data['lon'] = map_data['city'].map(lambda x: CITY_COORDS.get(x, {}).get('lon', np.nan))
     map_data = map_data.dropna(subset=['lat', 'lon'])
@@ -824,7 +825,9 @@ def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
         projection="mercator"
     )
     fig_map.update_geos(
-        fitbounds="locations",
+        center={"lat": 20.5937, "lon": 78.9629},
+        projection_scale=4.5,
+        fitbounds="locations" if not map_data.empty else False,
         visible=True,
         showcountries=True,
         countrycolor="#94a3b8", # slate gray country border
@@ -844,6 +847,19 @@ def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
             x=0.95, y=0.5
         )
     )
+
+    if map_data.empty:
+        fig_map.add_annotation(
+            text="Remote roles do not have a physical city location.<br>Select 'Hybrid' or 'On-Site' in the filters to view physical locations on the map.",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=13, color="#64748b", family="sans-serif"),
+            bgcolor="rgba(255, 255, 255, 0.9)",
+            bordercolor="#e2e8f0",
+            borderwidth=1,
+            borderpad=10
+        )
 
     # Table
     display_table = city_stats[['city', 'location_tier', 'total_jobs', 'avg_salary_lpa', 'numbeo_index', 'estimated_expenses_lpa', 'avg_disposable_income_lpa', 'purchasing_power_ratio']].copy()
