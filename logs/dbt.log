@@ -1,0 +1,105 @@
+[0m17:51:52.777644 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001F144725FD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001F146D1BED0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001F146D1BC50>]}
+
+
+============================== 17:51:52.789397 | dd52f3c0-d48c-49cf-9e19-c4ebadee7c4a ==============================
+[0m17:51:52.789397 [info ] [MainThread]: Running with dbt=1.12.0-b3
+[0m17:51:52.790226 [debug] [MainThread]: running dbt with arguments {'maximum_seed_size_mib': '1', 'no_print': 'None', 'version_check': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'static_parser': 'True', 'printer_width': '80', 'write_json': 'True', 'introspect': 'True', 'log_cache_events': 'False', 'empty': 'None', 'cache_selected_only': 'False', 'log_format': 'default', 'debug': 'False', 'fail_fast': 'False', 'profiles_dir': 'C:\\Users\\divya\\.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'use_colors': 'True', 'indirect_selection': 'eager', 'invocation_command': 'dbt init india_salary_dbt', 'use_experimental_parser': 'False', 'log_path': 'logs'}
+[0m17:51:52.829865 [info ] [MainThread]: Creating dbt configuration folder at C:\Users\divya\.dbt
+[0m17:51:52.833160 [debug] [MainThread]: Starter project path: C:\Users\divya\OneDrive\Desktop\india-salary-analysis\venv\Lib\site-packages\dbt\include\starter_project
+[0m17:51:52.871201 [info ] [MainThread]: Setting up your profile.
+[0m17:53:48.133318 [info ] [MainThread]: Profile india_salary_dbt written to C:\Users\divya\.dbt\profiles.yml using target's profile_template.yml and your supplied values.
+[0m17:53:48.140752 [info ] [MainThread]: Running dbt debug to validate the project...
+[0m17:53:48.142151 [info ] [MainThread]: dbt version: 1.12.0-b3
+[0m17:53:48.142829 [info ] [MainThread]: python version: 3.13.5
+[0m17:53:48.143587 [info ] [MainThread]: python path: C:\Users\divya\OneDrive\Desktop\india-salary-analysis\venv\Scripts\python.exe
+[0m17:53:48.144148 [info ] [MainThread]: os info: Windows-11-10.0.26200-SP0
+[0m17:53:48.210801 [info ] [MainThread]: Using profiles dir at C:\Users\divya\.dbt
+[0m17:53:48.211754 [info ] [MainThread]: Using profiles.yml file at C:\Users\divya\.dbt\profiles.yml
+[0m17:53:48.212469 [info ] [MainThread]: Using dbt_project.yml file at C:\Users\divya\OneDrive\Desktop\india-salary-analysis\india_salary_dbt\dbt_project.yml
+[0m17:53:48.214511 [info ] [MainThread]: adapter type: postgres
+[0m17:53:48.215405 [info ] [MainThread]: adapter version: 1.10.1
+[0m17:53:48.319675 [info ] [MainThread]: Configuration:
+[0m17:53:48.320441 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m17:53:48.320956 [info ] [MainThread]:   dbt_project.yml file [[32mOK found and valid[0m]
+[0m17:53:48.321482 [info ] [MainThread]: Required dependencies:
+[0m17:53:48.322046 [debug] [MainThread]: Executing "git --help"
+[0m17:53:48.379283 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   history    EXPERIMENTAL: Rewrite history\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Set `HEAD` or the index to a known state\n   switch     Switch branches\n   tag        Create, list, delete or verify tags\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m17:53:48.379801 [debug] [MainThread]: STDERR: "b''"
+[0m17:53:48.380277 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m17:53:48.380625 [info ] [MainThread]: Connection:
+[0m17:53:48.380907 [info ] [MainThread]:   host: localhost
+[0m17:53:48.381331 [info ] [MainThread]:   port: 5432
+[0m17:53:48.381688 [info ] [MainThread]:   user: postgres
+[0m17:53:48.382008 [info ] [MainThread]:   database: india_salary_db
+[0m17:53:48.382395 [info ] [MainThread]:   schema: public
+[0m17:53:48.382717 [info ] [MainThread]:   connect_timeout: 10
+[0m17:53:48.382988 [info ] [MainThread]:   role: None
+[0m17:53:48.383598 [info ] [MainThread]:   search_path: None
+[0m17:53:48.384398 [info ] [MainThread]:   keepalives_idle: 0
+[0m17:53:48.384797 [info ] [MainThread]:   sslmode: None
+[0m17:53:48.385112 [info ] [MainThread]:   sslcert: None
+[0m17:53:48.385419 [info ] [MainThread]:   sslkey: None
+[0m17:53:48.385861 [info ] [MainThread]:   sslrootcert: None
+[0m17:53:48.386457 [info ] [MainThread]:   application_name: dbt
+[0m17:53:48.387277 [info ] [MainThread]:   retries: 1
+[0m17:53:48.387938 [info ] [MainThread]: Registered adapter: postgres=1.10.1
+[0m17:53:48.929213 [debug] [MainThread]: Acquiring new postgres connection 'debug'
+[0m17:53:50.968068 [debug] [MainThread]: Using postgres connection "debug"
+[0m17:53:50.968497 [debug] [MainThread]: On debug: select 1 as id
+[0m17:53:50.968809 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m17:53:51.045713 [debug] [MainThread]: Postgres adapter: Got a retryable error when attempting to open a postgres connection.
+1 attempts remaining. Retrying in 0 seconds.
+Error:
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+[0m17:53:51.077112 [debug] [MainThread]: Postgres adapter: Error running SQL: select 1 as id
+[0m17:53:51.077651 [debug] [MainThread]: Postgres adapter: Rolling back transaction.
+[0m17:53:51.078165 [debug] [MainThread]: On debug: No close available on handle
+[0m17:53:51.078720 [info ] [MainThread]:   Connection test: [[31mERROR[0m]
+
+[0m17:53:51.079345 [info ] [MainThread]: [31m1 check failed:[0m
+[0m17:53:51.079888 [info ] [MainThread]: dbt was unable to connect to the specified database.
+The database returned the following error:
+
+  >Database Error
+  connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+  
+
+Check your database credentials and try again. For more information, visit:
+https://docs.getdbt.com/docs/configure-your-profile
+
+
+[0m17:53:51.080607 [info ] [MainThread]: Your new dbt project "india_salary_dbt" was created!
+Initialized new project in C:\Users\divya\OneDrive\Desktop\india-salary-analysis\india_salary_dbt\india_salary_dbt
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m17:53:51.081259 [info ] [MainThread]: [31mYour profile may need adjustments. You can find the logs of `dbt debug` above[0m
+[0m17:53:51.082383 [debug] [MainThread]: Command `dbt init` succeeded at 17:53:51.082216 after 118.48 seconds
+[0m17:53:51.082729 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m17:53:51.083219 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001F147375A70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001F146C1A330>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001F147329F20>]}
+[0m17:53:51.083576 [debug] [MainThread]: Flushing usage events
+[0m17:53:53.398547 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m18:10:02.352060 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BE60729FD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BE62D17ED0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BE62D17C50>]}
+
+
+============================== 18:10:02.366185 | 4cc128e0-105e-4640-bbc8-51e9d3ae5fa7 ==============================
+[0m18:10:02.366185 [info ] [MainThread]: Running with dbt=1.12.0-b3
+[0m18:10:02.366787 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'target_path': 'None', 'maximum_seed_size_mib': '1', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'profiles_dir': 'C:\\Users\\divya\\.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'use_colors': 'True', 'invocation_command': 'dbt init india_salary_dbt', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'log_path': 'logs'}
+[0m18:10:02.399944 [info ] [MainThread]: A project called india_salary_dbt already exists here.
+[0m18:10:02.401584 [debug] [MainThread]: Command `dbt init` succeeded at 18:10:02.401395 after 0.24 seconds
+[0m18:10:02.401970 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BE62D68640>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BE62C1A330>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BE62CC9040>]}
+[0m18:10:02.402329 [debug] [MainThread]: Flushing usage events
+[0m18:10:10.568882 [debug] [MainThread]: An error was encountered while trying to flush usage events
