@@ -827,7 +827,7 @@ def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
     fig_map.update_geos(
         center={"lat": 20.5937, "lon": 78.9629},
         projection_scale=4.5,
-        fitbounds="locations" if not map_data.empty else False,
+        fitbounds="locations" if len(map_data.drop_duplicates(subset=['lat', 'lon'])) > 1 else False,
         visible=True,
         showcountries=True,
         countrycolor="#94a3b8", # slate gray country border
