@@ -37,6 +37,35 @@ CITY_COORDS = {
     'Remote': {'lat': 22.9734, 'lon': 78.6569}
 }
 
+# 1.5. Company City Mapping (Resolves Remote jobs to physical cities)
+COMPANY_CITY_MAP = {
+    'Capgemini': 'Mumbai', 'Oracle': 'Bangalore', 'Ola': 'Bangalore', 'BSNL': 'Delhi',
+    'Khatabook': 'Bangalore', "Byju's": 'Bangalore', 'HAL': 'Bangalore', 'CRED': 'Bangalore',
+    'MakeMyTrip': 'Delhi', 'Accenture': 'Bangalore', 'Hasura': 'Bangalore', 'PhonePe': 'Bangalore',
+    'IBM': 'Bangalore', 'Razorpay': 'Bangalore', 'Google': 'Hyderabad', 'Lenskart': 'Delhi',
+    'BrowserStack': 'Mumbai', 'Deloitte': 'Hyderabad', 'InMobi': 'Bangalore', 'Tech Mahindra': 'Pune',
+    'Amazon': 'Bangalore', 'Microsoft': 'Hyderabad', 'BHEL': 'Delhi', 'TCS': 'Mumbai',
+    'Chargebee': 'Chennai', 'Groww': 'Bangalore', 'Swiggy': 'Bangalore', 'Wipro': 'Bangalore',
+    'ONGC': 'Delhi', 'ISRO': 'Bangalore', 'DRDO': 'Delhi', 'Infosys': 'Bangalore',
+    'Darwinbox': 'Hyderabad', 'Paytm': 'Delhi', 'Dream11': 'Mumbai', 'Cognizant': 'Chennai',
+    'Urban Company': 'Delhi', 'Freshworks': 'Chennai', 'Flipkart': 'Bangalore', 'Nykaa': 'Mumbai',
+    'Zoho': 'Chennai', 'Postman': 'Bangalore', 'Meesho': 'Bangalore', 'HCL Technologies': 'Delhi',
+    'Zerodha': 'Bangalore', 'Leadsquared': 'Bangalore', 'NTPC': 'Delhi', 'Zomato': 'Delhi',
+    'Fi Money': 'Bangalore', 'Setu': 'Bangalore', 'BEL': 'Bangalore', 'Slice': 'Bangalore',
+    'Cisco': 'Bangalore'
+}
+
+def get_company_city(company):
+    if not isinstance(company, str):
+        return 'Bangalore'
+    comp_clean = company.strip()
+    if comp_clean in COMPANY_CITY_MAP:
+        return COMPANY_CITY_MAP[comp_clean]
+    cities = ['Mumbai', 'Bangalore', 'Delhi', 'Pune', 'Hyderabad', 'Chennai', 'Kolkata', 'Ahmedabad', 'Chandigarh', 'Indore', 'Jaipur', 'Lucknow', 'Coimbatore', 'Nagpur', 'Bhubaneswar', 'Kochi']
+    hash_idx = sum(ord(char) for char in comp_clean) % len(cities)
+    return cities[hash_idx]
+
+
 # 2. Database Connection and Data Loader
 def load_data():
     try:
@@ -780,6 +809,15 @@ def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
     if selected_modes:
         filtered_salaries = filtered_salaries[filtered_salaries['work_mode'].isin(selected_modes)]
         
+    # Resolve physical city for Remote jobs (based on company location)
+    def resolve_city(row):
+        city = row['city']
+        if city == 'Remote' or pd.isna(city):
+            return get_company_city(row['company'])
+        return city
+        
+    filtered_salaries['city'] = filtered_salaries.apply(resolve_city, axis=1)
+
     # Recalculate City Stats
     city_agg = filtered_salaries.groupby(['city', 'location_tier']).agg(
         total_jobs=('job_id', 'count'),
@@ -968,6 +1006,15 @@ def update_ml_archetypes_tab(selected_titles, selected_exps, selected_modes):
         filtered_salaries = filtered_salaries[filtered_salaries['experience_level'].isin(selected_exps)]
     if selected_modes:
         filtered_salaries = filtered_salaries[filtered_salaries['work_mode'].isin(selected_modes)]
+        
+    # Resolve physical city for Remote jobs (based on company location)
+    def resolve_city(row):
+        city = row['city']
+        if city == 'Remote' or pd.isna(city):
+            return get_company_city(row['company'])
+        return city
+        
+    filtered_salaries['city'] = filtered_salaries.apply(resolve_city, axis=1)
         
     city_agg = filtered_salaries.groupby(['city', 'location_tier']).agg(
         total_jobs=('job_id', 'count'),
@@ -1535,6 +1582,15 @@ def update_trend_analysis_charts(selected_cities, selected_industries, split_by,
         
     # Copy dataset
     df_trend_data = df_salaries.copy()
+    
+    # Resolve physical city for Remote jobs (based on company location)
+    def resolve_city(row):
+        city = row['city']
+        if city == 'Remote' or pd.isna(city):
+            return get_company_city(row['company'])
+        return city
+        
+    df_trend_data['city'] = df_trend_data.apply(resolve_city, axis=1)
     
     # Filter based on global sidebar filters
     if selected_titles:
