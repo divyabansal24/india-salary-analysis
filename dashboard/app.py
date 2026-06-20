@@ -11,7 +11,8 @@ from dash import dcc, html, Input, Output, dash_table
 app = dash.Dash(
     __name__,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
-    title="India Tech Salaries & Cost of Living"
+    title="India Tech Salaries & Cost of Living",
+    suppress_callback_exceptions=True
 )
 server = app.server
 
@@ -756,15 +757,11 @@ def render_tab_content(tab_name):
                 )
             ]
         )
-
-# 6. Interactive Data Callbacks
+# 6a. Callback for Geo-Economics Tab & KPIs
 @app.callback(
     [Output("india-mapbox", "figure"),
      Output("city-table-container", "children"),
      Output("trend-line-chart", "figure"),
-     Output("kmeans-scatter", "figure"),
-     Output("skills-pay-chart", "figure"),
-     Output("skills-demand-chart", "figure"),
      Output("kpi-total-jobs", "children"),
      Output("kpi-avg-salary", "children"),
      Output("kpi-top-savings-city", "children"),
@@ -773,8 +770,7 @@ def render_tab_content(tab_name):
      Input("exp-level-dropdown", "value"),
      Input("work-mode-dropdown", "value")]
 )
-def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
-    # Filter salaries dataset
+def update_geo_economics_tab(selected_titles, selected_exps, selected_modes):
     filtered_salaries = df_salaries.copy()
     if selected_titles:
         filtered_salaries = filtered_salaries[filtered_salaries['job_title'].isin(selected_titles)]
@@ -807,7 +803,7 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
     map_data['lon'] = map_data['city'].map(lambda x: CITY_COORDS.get(x, {}).get('lon', np.nan))
     map_data = map_data.dropna(subset=['lat', 'lon'])
     
-    # 6a. Map Figure (Standard geographical scatter map to ensure offline-readiness and avoid WebGL errors)
+    # Map Figure (Standard geographical scatter map to ensure offline-readiness and avoid WebGL errors)
     fig_map = px.scatter_geo(
         map_data,
         lat="lat",
@@ -831,10 +827,10 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
         fitbounds="locations",
         visible=True,
         showcountries=True,
-        countrycolor="rgba(100, 116, 139, 0.4)",
-        showland=True, landcolor="#ffffff",
-        showocean=True, oceancolor="#f8fafc",
-        showlakes=True, lakecolor="#e0f2fe"
+        countrycolor="#94a3b8", # slate gray country border
+        showland=True, landcolor="#f1f5f9", # light gray land color
+        showocean=True, oceancolor="#e0f2fe", # light blue ocean color
+        showlakes=True, lakecolor="#cbd5e1" # lake color
     )
     fig_map.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
@@ -849,7 +845,7 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
         )
     )
 
-    # 6b. Table
+    # Table
     display_table = city_stats[['city', 'location_tier', 'total_jobs', 'avg_salary_lpa', 'numbeo_index', 'estimated_expenses_lpa', 'avg_disposable_income_lpa', 'purchasing_power_ratio']].copy()
     display_table.columns = ['City', 'Tier', 'Jobs Volume', 'Avg Salary (LPA)', 'Numbeo Index (NYC=100)', 'Est. Expenses (LPA)', 'Disposable Income (LPA)', 'PPI Ratio']
     
@@ -890,7 +886,7 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
         style_table={'overflowX': 'auto'}
     )
 
-    # 6bb. New Trend Line Chart
+    # Trend Line Chart
     df_trend_data = filtered_salaries.copy()
     df_trend_data['month'] = pd.to_datetime(df_trend_data['date_posted']).dt.to_period('M').astype(str)
     df_trend = df_trend_data.groupby(['month', 'work_mode']).agg(
@@ -919,9 +915,52 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
         yaxis=dict(showgrid=True, gridcolor="#f1f5f9"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
-    fig_trend.update_traces(line=dict(width=3.5), marker=dict(size=8)) # Thick lines and distinct dots
+    fig_trend.update_traces(line=dict(width=3.5), marker=dict(size=8))
 
-    # 6c. K-Means Archetypes Scatter
+    # Calculate dynamic KPI values
+    kpi_jobs = f"{len(filtered_salaries):,}"
+    
+    if len(filtered_salaries) > 0:
+        kpi_salary = f"{filtered_salaries['salary_lpa'].mean():.2f} LPA"
+    else:
+        kpi_salary = "0.00 LPA"
+        
+    if len(city_stats) > 0 and city_stats['total_jobs'].sum() > 0:
+        top_city_row = city_stats.sort_values(by='avg_disposable_income_lpa', ascending=False).iloc[0]
+        kpi_city = top_city_row['city']
+        kpi_savings = f"Disposable Income: {top_city_row['avg_disposable_income_lpa']:.2f} LPA"
+    else:
+        kpi_city = "N/A"
+        kpi_savings = "Disposable Income: 0.00 LPA"
+
+    return fig_map, table_view, fig_trend, kpi_jobs, kpi_salary, kpi_city, kpi_savings
+
+
+# 6b. Callback for ML Archetypes Tab
+@app.callback(
+    Output("kmeans-scatter", "figure"),
+    [Input("job-title-dropdown", "value"),
+     Input("exp-level-dropdown", "value"),
+     Input("work-mode-dropdown", "value")]
+)
+def update_ml_archetypes_tab(selected_titles, selected_exps, selected_modes):
+    filtered_salaries = df_salaries.copy()
+    if selected_titles:
+        filtered_salaries = filtered_salaries[filtered_salaries['job_title'].isin(selected_titles)]
+    if selected_exps:
+        filtered_salaries = filtered_salaries[filtered_salaries['experience_level'].isin(selected_exps)]
+    if selected_modes:
+        filtered_salaries = filtered_salaries[filtered_salaries['work_mode'].isin(selected_modes)]
+        
+    city_agg = filtered_salaries.groupby(['city', 'location_tier']).agg(
+        total_jobs=('job_id', 'count'),
+        avg_salary_lpa=('salary_lpa', 'mean')
+    ).reset_index()
+    
+    df_col_raw = df_city[['city', 'estimated_expenses_lpa', 'archetype']].drop_duplicates('city')
+    city_stats = pd.merge(city_agg, df_col_raw, on='city', how='left')
+    city_stats['estimated_expenses_lpa'] = city_stats['estimated_expenses_lpa'].fillna(4.0)
+
     fig_kmeans = px.scatter(
         city_stats,
         x="avg_salary_lpa",
@@ -950,9 +989,18 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
         yaxis=dict(showgrid=True, gridcolor="#f1f5f9"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
-    
-    # 6d. Skills Pay Chart (UPGRADED: COLORFUL & VIBRANT BLUE-GREEN SEQUENCE)
-    # Filter skills dataset based on dropdown selections
+    return fig_kmeans
+
+
+# 6c. Callback for Skills Premium Tab
+@app.callback(
+    [Output("skills-pay-chart", "figure"),
+     Output("skills-demand-chart", "figure")],
+    [Input("job-title-dropdown", "value"),
+     Input("exp-level-dropdown", "value"),
+     Input("work-mode-dropdown", "value")]
+)
+def update_skills_premium_tab(selected_titles, selected_exps, selected_modes):
     filtered_skills = df_skills.copy()
     if selected_titles:
         filtered_skills = filtered_skills[filtered_skills['job_title'].isin(selected_titles)]
@@ -966,62 +1014,63 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
         job_count=('salary_lpa', 'count')
     ).reset_index()
     
-    # Highest paying skills (min 5 job postings for statistical significance)
     top_paying_skills = skill_stats[skill_stats['job_count'] >= 5].sort_values(by='avg_salary', ascending=False).head(15)
-    fig_skills_pay = px.bar(
-        top_paying_skills,
-        y="skill",
-        x="avg_salary",
-        orientation="h",
-        color="skill", # Corporate cohesive sequence of blues and greens
-        color_discrete_sequence=["#0a4c80", "#1e3b70", "#1d5893", "#418ab3", "#6baed6", "#9ecae1", "#c6dbef", "#4caf50", "#2e7d32", "#66bb6a", "#81c784", "#a5d6a7", "#c8e6c9", "#10b981", "#34d399"],
-        labels={"avg_salary": "Average Salary (LPA)", "skill": "Skill"},
-        hover_data={"job_count": True}
-    )
-    fig_skills_pay.update_layout(
-        showlegend=False,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#ffffff",
-        font_color=TEXT_COLOR,
-        margin={"t":10,"b":40,"l":120,"r":10},
-        xaxis=dict(showgrid=True, gridcolor="#f1f5f9"),
-        yaxis=dict(showgrid=False, categoryorder='total ascending')
-    )
+    if top_paying_skills.empty:
+        fig_skills_pay = go.Figure()
+        fig_skills_pay.update_layout(
+            title="No skills data matching criteria.",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=TEXT_COLOR
+        )
+    else:
+        fig_skills_pay = px.bar(
+            top_paying_skills,
+            y="skill",
+            x="avg_salary",
+            orientation="h",
+            color="skill", # Corporate cohesive sequence of blues and greens
+            color_discrete_sequence=["#0a4c80", "#1e3b70", "#1d5893", "#418ab3", "#6baed6", "#9ecae1", "#c6dbef", "#4caf50", "#2e7d32", "#66bb6a", "#81c784", "#a5d6a7", "#c8e6c9", "#10b981", "#34d399"],
+            labels={"avg_salary": "Average Salary (LPA)", "skill": "Skill"},
+            hover_data={"job_count": True}
+        )
+        fig_skills_pay.update_layout(
+            showlegend=False,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="#ffffff",
+            font_color=TEXT_COLOR,
+            margin={"t":10,"b":40,"l":120,"r":10},
+            xaxis=dict(showgrid=True, gridcolor="#f1f5f9"),
+            yaxis=dict(showgrid=False, categoryorder='total ascending')
+        )
 
-    # 6e. Skills Demand Chart (UPGRADED: BLUE-GREEN TREEMAP!)
     top_demand_skills = skill_stats.sort_values(by='job_count', ascending=False).head(15)
-    fig_skills_demand = px.treemap(
-        top_demand_skills,
-        path=[px.Constant("All Skills"), "skill"],
-        values="job_count",
-        color="job_count",
-        color_continuous_scale=["#e0f2fe", "#0a4c80", "#4caf50"], # PwC Corporate Blue to Green Scale
-        labels={"job_count": "Job Count", "skill": "Skill"}
-    )
-    fig_skills_demand.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color=TEXT_COLOR,
-        margin={"t":20,"b":20,"l":20,"r":20}
-    )
-
-    # Calculate dynamic KPI values
-    kpi_jobs = f"{len(filtered_salaries):,}"
-    
-    if len(filtered_salaries) > 0:
-        kpi_salary = f"{filtered_salaries['salary_lpa'].mean():.2f} LPA"
+    if top_demand_skills.empty:
+        fig_skills_demand = go.Figure()
+        fig_skills_demand.update_layout(
+            title="No skills data matching criteria.",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=TEXT_COLOR
+        )
     else:
-        kpi_salary = "0.00 LPA"
+        fig_skills_demand = px.treemap(
+            top_demand_skills,
+            path=[px.Constant("All Skills"), "skill"],
+            values="job_count",
+            color="job_count",
+            color_continuous_scale=["#e0f2fe", "#0a4c80", "#4caf50"], # PwC Corporate Blue to Green Scale
+            labels={"job_count": "Job Count", "skill": "Skill"}
+        )
+        fig_skills_demand.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=TEXT_COLOR,
+            margin={"t":20,"b":20,"l":20,"r":20}
+        )
         
-    if len(city_stats) > 0 and city_stats['total_jobs'].sum() > 0:
-        top_city_row = city_stats.sort_values(by='avg_disposable_income_lpa', ascending=False).iloc[0]
-        kpi_city = top_city_row['city']
-        kpi_savings = f"Disposable Income: {top_city_row['avg_disposable_income_lpa']:.2f} LPA"
-    else:
-        kpi_city = "N/A"
-        kpi_savings = "Disposable Income: 0.00 LPA"
+    return fig_skills_pay, fig_skills_demand
 
-    return fig_map, table_view, fig_trend, fig_kmeans, fig_skills_pay, fig_skills_demand, kpi_jobs, kpi_salary, kpi_city, kpi_savings
 
 
 # 8. Salary Prediction Callback
@@ -1032,9 +1081,12 @@ def update_dashboard_graphs(selected_titles, selected_exps, selected_modes):
     [Input("pred-city", "value"),
      Input("pred-exp", "value"),
      Input("pred-industry", "value"),
-     Input("pred-mode", "value")]
+     Input("pred-mode", "value"),
+     Input("job-title-dropdown", "value"),
+     Input("exp-level-dropdown", "value"),
+     Input("work-mode-dropdown", "value")]
 )
-def predict_salary(city, exp, industry, mode):
+def predict_salary(city, exp, industry, mode, selected_titles, selected_exps, selected_modes):
     input_df = pd.DataFrame(0, index=[0], columns=ml_columns)
     
     col_city = f"city_{city}"
@@ -1053,7 +1105,15 @@ def predict_salary(city, exp, industry, mode):
         
     pred_val = rf_predictor.predict(input_df)[0]
     
-    national_avg = df_salaries['salary_lpa'].mean()
+    filtered_salaries = df_salaries.copy()
+    if selected_titles:
+        filtered_salaries = filtered_salaries[filtered_salaries['job_title'].isin(selected_titles)]
+    if selected_exps:
+        filtered_salaries = filtered_salaries[filtered_salaries['experience_level'].isin(selected_exps)]
+    if selected_modes:
+        filtered_salaries = filtered_salaries[filtered_salaries['work_mode'].isin(selected_modes)]
+        
+    national_avg = filtered_salaries['salary_lpa'].mean() if len(filtered_salaries) > 0 else df_salaries['salary_lpa'].mean()
     diff_pct = ((pred_val - national_avg) / national_avg) * 100
     
     if diff_pct >= 0:
@@ -1090,15 +1150,33 @@ def predict_salary(city, exp, industry, mode):
     Output("recommender-results", "children"),
     [Input("rec-salary", "value"),
      Input("rec-industry", "value"),
-     Input("rec-mode", "value")]
+     Input("rec-mode", "value"),
+     Input("job-title-dropdown", "value"),
+     Input("exp-level-dropdown", "value"),
+     Input("work-mode-dropdown", "value")]
 )
-def update_recommendations(expected_salary, industry, mode):
+def update_recommendations(expected_salary, industry, mode, selected_titles, selected_exps, selected_modes):
+    # Filter salaries dataset based on global filters
+    filtered_salaries = df_salaries.copy()
+    if selected_titles:
+        filtered_salaries = filtered_salaries[filtered_salaries['job_title'].isin(selected_titles)]
+    if selected_exps:
+        filtered_salaries = filtered_salaries[filtered_salaries['experience_level'].isin(selected_exps)]
+    if selected_modes:
+        filtered_salaries = filtered_salaries[filtered_salaries['work_mode'].isin(selected_modes)]
+        
+    if filtered_salaries.empty:
+        return html.Div(
+            "No matching data found for selected global filters. Clear some filters to view recommendations.",
+            style={"textAlign": "center", "color": "#ef4444", "padding": "20px", "fontWeight": "600"}
+        )
+        
     # All physical cities in dataset (excluding Remote)
-    physical_cities = [c for c in df_salaries['city'].unique() if c != 'Remote']
+    physical_cities = [c for c in filtered_salaries['city'].unique() if c != 'Remote']
     
     # We will build a single DataFrame to predict in batch for efficiency
     predict_rows = []
-    exp_levels = df_salaries['experience_level'].unique()
+    exp_levels = filtered_salaries['experience_level'].unique()
     
     for city in physical_cities:
         pred_city = 'Remote' if mode == 'Remote' else city
@@ -1120,9 +1198,9 @@ def update_recommendations(expected_salary, industry, mode):
     city_salaries = pred_df.groupby('target_city')['pred_salary'].mean().to_dict()
     
     # Let's count jobs per city for this industry and work mode
-    job_counts = df_salaries[
-        (df_salaries['industry'] == industry) & 
-        (df_salaries['work_mode'] == mode)
+    job_counts = filtered_salaries[
+        (filtered_salaries['industry'] == industry) & 
+        (filtered_salaries['work_mode'] == mode)
     ].groupby('city').size().to_dict()
     
     # Aggregate city archetype info
@@ -1132,7 +1210,7 @@ def update_recommendations(expected_salary, industry, mode):
     results = []
     for city in physical_cities:
         # Predicted market salary
-        pred_sal = city_salaries.get(city, df_salaries['salary_lpa'].mean())
+        pred_sal = city_salaries.get(city, filtered_salaries['salary_lpa'].mean())
         
         # Get city expenses & info
         c_info = city_info.get(city, {})
@@ -1426,9 +1504,12 @@ def update_recommendations(expected_salary, industry, mode):
     [Input("trend-cities-dropdown", "value"),
      Input("trend-industries-dropdown", "value"),
      Input("trend-split-radio", "value"),
-     Input("trend-grouping-radio", "value")]
+     Input("trend-grouping-radio", "value"),
+     Input("job-title-dropdown", "value"),
+     Input("exp-level-dropdown", "value"),
+     Input("work-mode-dropdown", "value")]
 )
-def update_trend_analysis_charts(selected_cities, selected_industries, split_by, grouping):
+def update_trend_analysis_charts(selected_cities, selected_industries, split_by, grouping, selected_titles, selected_exps, selected_modes):
     # Fallback to defaults if empty
     if not selected_cities:
         selected_cities = []
@@ -1437,6 +1518,14 @@ def update_trend_analysis_charts(selected_cities, selected_industries, split_by,
         
     # Copy dataset
     df_trend_data = df_salaries.copy()
+    
+    # Filter based on global sidebar filters
+    if selected_titles:
+        df_trend_data = df_trend_data[df_trend_data['job_title'].isin(selected_titles)]
+    if selected_exps:
+        df_trend_data = df_trend_data[df_trend_data['experience_level'].isin(selected_exps)]
+    if selected_modes:
+        df_trend_data = df_trend_data[df_trend_data['work_mode'].isin(selected_modes)]
     
     # Parse dates and group
     df_trend_data['date_parsed'] = pd.to_datetime(df_trend_data['date_posted'])
@@ -1518,13 +1607,27 @@ def update_trend_analysis_charts(selected_cities, selected_industries, split_by,
     [Output("skills-core-chart", "figure"),
      Output("skills-niche-chart", "figure"),
      Output("skills-premium-chart", "figure")],
-    [Input("skills-gap-title-dropdown", "value")]
+    [Input("skills-gap-title-dropdown", "value"),
+     Input("job-title-dropdown", "value"),
+     Input("exp-level-dropdown", "value"),
+     Input("work-mode-dropdown", "value")]
 )
-def update_skills_gap_analysis(selected_title):
-    # 1. Filter skills dataset
-    df_sub = df_skills[df_skills['job_title'] == selected_title].copy()
+def update_skills_gap_analysis(selected_title, selected_titles, selected_exps, selected_modes):
+    # Filter global datasets first
+    filtered_skills = df_skills.copy()
+    filtered_salaries = df_salaries.copy()
     
-    total_jobs = len(df_salaries[df_salaries['job_title'] == selected_title])
+    if selected_exps:
+        filtered_skills = filtered_skills[filtered_skills['experience_level'].isin(selected_exps)]
+        filtered_salaries = filtered_salaries[filtered_salaries['experience_level'].isin(selected_exps)]
+    if selected_modes:
+        filtered_skills = filtered_skills[filtered_skills['work_mode'].isin(selected_modes)]
+        filtered_salaries = filtered_salaries[filtered_salaries['work_mode'].isin(selected_modes)]
+        
+    # 1. Filter skills dataset
+    df_sub = filtered_skills[filtered_skills['job_title'] == selected_title].copy()
+    
+    total_jobs = len(filtered_salaries[filtered_salaries['job_title'] == selected_title])
     if total_jobs == 0:
         total_jobs = 1
         
