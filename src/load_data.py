@@ -1,7 +1,6 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pandas as pd
 
-# Connect to PostgreSQL
 engine = create_engine('postgresql://postgres:postgres123@localhost/india_salary_db')
 
 # Load dataset
@@ -13,6 +12,12 @@ print("Columns:", df.columns.tolist())
 
 # Push to PostgreSQL
 df.columns = [col.lower() for col in df.columns]
+
+# Drop table with cascade first
+with engine.connect() as conn:
+    conn.execute(text("DROP TABLE IF EXISTS raw_salaries CASCADE"))
+    conn.commit()
+
 df.to_sql('raw_salaries', engine, if_exists='replace', index=False)
+
 print("Data loaded into PostgreSQL successfully with lowercase columns!")
-
